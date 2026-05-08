@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasy_Encyclopedia.Core",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitTesting", "Fantasty_EncyclopediaXUnit.Tests\XUnitTesting.csproj", "{A0BAB80D-2A2F-4D78-B21A-3F3816414251}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeleniumTests", "SeleniumTests\SeleniumTests.csproj", "{1B30505E-7830-4241-A49B-FA50AC62F061}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{A0BAB80D-2A2F-4D78-B21A-3F3816414251}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0BAB80D-2A2F-4D78-B21A-3F3816414251}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0BAB80D-2A2F-4D78-B21A-3F3816414251}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1B30505E-7830-4241-A49B-FA50AC62F061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B30505E-7830-4241-A49B-FA50AC62F061}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B30505E-7830-4241-A49B-FA50AC62F061}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B30505E-7830-4241-A49B-FA50AC62F061}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
