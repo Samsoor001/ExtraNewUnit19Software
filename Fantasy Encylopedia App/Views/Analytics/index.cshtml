@@ -1,0 +1,61 @@
+﻿@model Fantasy_Encylopedia_App.Controllers.AnalyticsDashboardViewModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FBZ Staff Analytics</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>FBZ Staff Analytics</h1>
+
+        <h2>Comics Included in More Than 100 Search Results</h2>
+        @if (!Model.ComicsOver100.Any())
+        {
+            <p>No comics have exceeded 100 returned results yet.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var item in Model.ComicsOver100)
+                {
+                    <li>@item.Name - @item.Count</li>
+                }
+            </ul>
+        }
+
+        <h2>Top 10 Most Common Search Queries</h2>
+        @if (!Model.TopQueries.Any())
+        {
+            <p>No search queries logged yet.</p>
+        }
+        else
+        {
+            <ol>
+                @foreach (var item in Model.TopQueries)
+                {
+                    <li>@item.Name - @item.Count</li>
+                }
+            </ol>
+        }
+
+        <h2>Top 10 Most Frequently Returned Search Results</h2>
+        @if (!Model.TopReturnedComics.Any())
+        {
+            <p>No returned results logged yet.</p>
+        }
+        else
+        {
+            <ol>
+                @foreach (var item in Model.TopReturnedComics)
+                {
+                    <li>@item.Name - @item.Count</li>
+                }
+            </ol>
+        }
+    </div>
+</body>
+</html>

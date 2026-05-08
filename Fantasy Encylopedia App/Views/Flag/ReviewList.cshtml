@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Fantasy_Encylopedia_App.Models.FlaggedComic>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flagged Comics</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Flagged Comics for Review</h1>
+
+        @if (!Model.Any())
+        {
+            <p><i>No comics have been flagged yet.</i></p>
+        }
+        else
+        {
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Genre</th>
+                            <th>ISBN</th>
+                            <th>Publisher</th>
+                            <th>Date</th>
+                            <th>Language</th>
+                            <th>Name Type</th>
+                            <th>Reason</th>
+                            <th>Flagged At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comic in Model)
+                        {
+                            <tr>
+                                <td>@comic.Title</td>
+                                <td>@comic.Author</td>
+                                <td>@comic.Genre</td>
+                                <td>@comic.ISBN</td>
+                                <td>@comic.Publisher</td>
+                                <td>@comic.DateOfPublication</td>
+                                <td>@comic.Language</td>
+                                <td>@comic.NameType</td>
+                                <td>@comic.FlagReason</td>
+                                <td>@comic.FlaggedAt</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</body>
+</html>

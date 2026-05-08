@@ -1,0 +1,426 @@
+﻿@model Fantasy_Encylopedia_App.Models.ComicSearchViewModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV File Upload</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Upload CSV File</h1>
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <form asp-controller="CsvImporter" asp-action="Index" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="csvFile" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+
+        <hr />
+
+        @if (Model.Genres.Any() || Model.Years.Any() || Model.Languages.Any() || Model.NameTypes.Any())
+        {
+            <h2>Search / Filter</h2>
+
+            <form method="get" asp-controller="CsvImporter" asp-action="Index">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:end;">
+
+                    <div>
+                        <label>Title contains</label><br />
+                        <input name="TitleQuery" value="@Model.TitleQuery" class="form-control" placeholder="e.g. Batman" />
+                    </div>
+
+                    <div>
+                        <label>Author contains</label><br />
+                        <input name="AuthorQuery" value="@Model.AuthorQuery" class="form-control" placeholder="e.g. Alan Moore" />
+                    </div>
+
+                    <div>
+                        <label>Genre</label><br />
+                        <select name="SelectedGenre" class="form-control">
+                            <option value="">All</option>
+                            @foreach (var g in Model.Genres)
+                            {
+                                <option value="@g" selected="@(Model.SelectedGenre == g)">@g</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Publication Year</label><br />
+                        <select name="SelectedYear" class="form-control">
+                            <option value="">All</option>
+                            @foreach (var y in Model.Years)
+                            {
+                                <option value="@y" selected="@(Model.SelectedYear == y)">@y</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Edition Language</label><br />
+                        <select name="SelectedLanguage" class="form-control">
+                            <option value="">All</option>
+                            @foreach (var l in Model.Languages)
+                            {
+                                <option value="@l" selected="@(Model.SelectedLanguage == l)">@l</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Name Type</label><br />
+                        <select name="SelectedNameType" class="form-control">
+                            <option value="">All</option>
+                            @foreach (var nt in Model.NameTypes)
+                            {
+                                <option value="@nt" selected="@(Model.SelectedNameType == nt)">@nt</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Sort Title</label><br />
+                        <select name="SortTitle" class="form-control">
+                            <option value="az" selected="@(Model.SortTitle == "az")">A–Z</option>
+                            <option value="za" selected="@(Model.SortTitle == "za")">Z–A</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Group Results</label><br />
+                        <select name="GroupBy" class="form-control">
+                            <option value="none" selected="@(Model.GroupBy == "none")">No grouping</option>
+                            <option value="year" selected="@(Model.GroupBy == "year")">Group by Year</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr />
+
+            <p>
+                Matches: <b>@(ViewBag.TotalMatches ?? 0)</b>
+                @if (Model.GroupBy != "year")
+                {
+                    <span> | Showing first <b>@(ViewBag.DisplayCap ?? 0)</b> rows for performance.</span>
+                }
+            </p>
+
+            @if (Model.GroupBy == "year" && Model.Grouped.Any())
+            {
+                @foreach (var group in Model.Grouped)
+                {
+                    <h3>@group.Key</h3>
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Genre</th>
+                                    <th>Author (Name)</th>
+                                    <th>ISBN</th>
+                                    <th>Publisher</th>
+                                    <th>Date</th>
+                                    <th>Language</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in group.Value.Take(200))
+                                {
+                                    <tr>
+                                        <td>@b.Title</td>
+                                        <td>@b.Genre</td>
+                                        <td>@b.Name</td>
+                                        <td>@b.ISBN</td>
+                                        <td>@b.Publisher</td>
+                                        <td>@b.DateOfPublication</td>
+                                        <td>@b.Languages</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p><i>Showing first 200 in this group for performance.</i></p>
+                }
+            }
+            else if (Model.Results.Any())
+            {
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <form asp-controller="SaveComic" asp-action="SaveSelected" method="post" id="saveComicForm" style="margin-bottom:15px;">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="title" id="selectedTitle" />
+                        <input type="hidden" name="author" id="selectedAuthor" />
+                        <input type="hidden" name="genre" id="selectedGenreValue" />
+                        <input type="hidden" name="isbn" id="selectedISBN" />
+                        <input type="hidden" name="publisher" id="selectedPublisher" />
+                        <input type="hidden" name="dateOfPublication" id="selectedDateOfPublication" />
+                        <input type="hidden" name="language" id="selectedLanguageValue" />
+                        <input type="hidden" name="nameType" id="selectedNameTypeValue" />
+
+                        <button type="submit" class="btn btn-primary" id="saveSelectedBtn" disabled>
+                            Save Selected Comic
+                        </button>
+
+                        <a asp-controller="SaveComic" asp-action="MySavedComics" style="margin-left:12px;">
+                            View My Saved Comics
+                        </a>
+                    </form>
+                }
+                else
+                {
+                    <p>
+                        <a asp-area="Identity" asp-page="/Account/Login">Log in</a> to save comics and view your saved list.
+                    </p>
+                }
+
+                @if (User.IsInRole("FBZStaff"))
+                {
+                    <form asp-controller="Flag" asp-action="FlagSelected" method="post" id="flagComicForm" style="margin-bottom:15px;">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="title" id="flagTitle" />
+                        <input type="hidden" name="author" id="flagAuthor" />
+                        <input type="hidden" name="genre" id="flagGenre" />
+                        <input type="hidden" name="isbn" id="flagISBN" />
+                        <input type="hidden" name="publisher" id="flagPublisher" />
+                        <input type="hidden" name="dateOfPublication" id="flagDateOfPublication" />
+                        <input type="hidden" name="language" id="flagLanguage" />
+                        <input type="hidden" name="nameType" id="flagNameType" />
+                        <input type="hidden" name="flagReason" value="Marked for review" />
+
+                        <button type="submit" class="btn btn-primary" id="flagSelectedBtn" disabled>
+                            Flag Selected Comic
+                        </button>
+
+                        <a asp-controller="Flag" asp-action="ReviewList" style="margin-left:12px;">
+                            View Flagged Comics
+                        </a>
+                    </form>
+                }
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Genre</th>
+                                <th>Author (Name)</th>
+                                <th>ISBN</th>
+                                <th>Publisher</th>
+                                <th>Date</th>
+                                <th>Language</th>
+                                <th>Name Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            @foreach (var b in Model.Results)
+                            {
+                                <tr class="comic-row"
+                                    data-title="@b.Title"
+                                    data-author="@b.Name"
+                                    data-genre="@b.Genre"
+                                    data-isbn="@b.ISBN"
+                                    data-publisher="@b.Publisher"
+                                    data-date="@b.DateOfPublication"
+                                    data-language="@b.Languages"
+                                    data-nametype="@b.TypeOfName">
+                                    <td>@b.Title</td>
+                                    <td>@b.Genre</td>
+                                    <td>@b.Name</td>
+                                    <td>@b.ISBN</td>
+                                    <td>@b.Publisher</td>
+                                    <td>@b.DateOfPublication</td>
+                                    <td>@b.Languages</td>
+                                    <td>@b.TypeOfName</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <button id="loadMoreBtn"
+                        type="button"
+                        class="btn btn-primary"
+                        style="margin-top:15px;">
+                    Load more
+                </button>
+            }
+            else
+            {
+                <p>No results found.</p>
+            }
+        }
+        else
+        {
+            <p><i>Upload a CSV to enable searching and filtering.</i></p>
+        }
+
+        <script>
+            const btn = document.getElementById("loadMoreBtn");
+            const tbody = document.getElementById("resultsBody");
+
+            const saveSelectedBtn = document.getElementById("saveSelectedBtn");
+            const selectedTitle = document.getElementById("selectedTitle");
+            const selectedAuthor = document.getElementById("selectedAuthor");
+            const selectedGenreValue = document.getElementById("selectedGenreValue");
+            const selectedISBN = document.getElementById("selectedISBN");
+            const selectedPublisher = document.getElementById("selectedPublisher");
+            const selectedDateOfPublication = document.getElementById("selectedDateOfPublication");
+            const selectedLanguageValue = document.getElementById("selectedLanguageValue");
+            const selectedNameTypeValue = document.getElementById("selectedNameTypeValue");
+
+            const flagSelectedBtn = document.getElementById("flagSelectedBtn");
+            const flagTitle = document.getElementById("flagTitle");
+            const flagAuthor = document.getElementById("flagAuthor");
+            const flagGenre = document.getElementById("flagGenre");
+            const flagISBN = document.getElementById("flagISBN");
+            const flagPublisher = document.getElementById("flagPublisher");
+            const flagDateOfPublication = document.getElementById("flagDateOfPublication");
+            const flagLanguage = document.getElementById("flagLanguage");
+            const flagNameType = document.getElementById("flagNameType");
+
+            function attachRowSelection() {
+                const comicRows = document.querySelectorAll(".comic-row");
+
+                comicRows.forEach(row => {
+                    row.addEventListener("click", () => {
+                        comicRows.forEach(r => r.classList.remove("selected-row"));
+                        row.classList.add("selected-row");
+
+                        if (saveSelectedBtn && selectedTitle && selectedAuthor && selectedGenreValue &&
+                            selectedISBN && selectedPublisher && selectedDateOfPublication &&
+                            selectedLanguageValue && selectedNameTypeValue) {
+
+                            selectedTitle.value = row.dataset.title || "";
+                            selectedAuthor.value = row.dataset.author || "";
+                            selectedGenreValue.value = row.dataset.genre || "";
+                            selectedISBN.value = row.dataset.isbn || "";
+                            selectedPublisher.value = row.dataset.publisher || "";
+                            selectedDateOfPublication.value = row.dataset.date || "";
+                            selectedLanguageValue.value = row.dataset.language || "";
+                            selectedNameTypeValue.value = row.dataset.nametype || "";
+
+                            saveSelectedBtn.disabled = false;
+                        }
+
+                        if (flagSelectedBtn && flagTitle && flagAuthor && flagGenre &&
+                            flagISBN && flagPublisher && flagDateOfPublication &&
+                            flagLanguage && flagNameType) {
+
+                            flagTitle.value = row.dataset.title || "";
+                            flagAuthor.value = row.dataset.author || "";
+                            flagGenre.value = row.dataset.genre || "";
+                            flagISBN.value = row.dataset.isbn || "";
+                            flagPublisher.value = row.dataset.publisher || "";
+                            flagDateOfPublication.value = row.dataset.date || "";
+                            flagLanguage.value = row.dataset.language || "";
+                            flagNameType.value = row.dataset.nametype || "";
+
+                            flagSelectedBtn.disabled = false;
+                        }
+                    });
+                });
+            }
+
+            function escapeHtml(value) {
+                if (value === null || value === undefined) return "";
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+
+            attachRowSelection();
+
+            if (btn && tbody) {
+                let skip = @Model.Results.Count;
+                const take = 200;
+
+                async function loadMore() {
+                    btn.disabled = true;
+                    btn.innerText = "Loading...";
+
+                    const params = new URLSearchParams({
+                        titleQuery: "@(Model.TitleQuery ?? "")",
+                        authorQuery: "@(Model.AuthorQuery ?? "")",
+                        selectedGenre: "@(Model.SelectedGenre ?? "")",
+                        selectedLanguage: "@(Model.SelectedLanguage ?? "")",
+                        selectedNameType: "@(Model.SelectedNameType ?? "")",
+                        sortTitle: "@(Model.SortTitle ?? "az")",
+                        skip: skip.toString(),
+                        take: take.toString()
+                    });
+
+                    @if (Model.SelectedYear.HasValue)
+                    {
+                            <text>params.append("selectedYear", "@Model.SelectedYear.Value");</text>
+                    }
+
+                    const res = await fetch(`/CsvImporter/More?${params.toString()}`);
+                    if (!res.ok) {
+                        btn.innerText = "Load more";
+                        btn.disabled = false;
+                        alert("Failed to load more rows.");
+                        return;
+                    }
+
+                    const rows = await res.json();
+
+                    if (!rows || rows.length === 0) {
+                        btn.innerText = "No more rows";
+                        btn.disabled = true;
+                        return;
+                    }
+
+                    for (const b of rows) {
+                        const tr = document.createElement("tr");
+                        tr.classList.add("comic-row");
+                        tr.dataset.title = b.title ?? "";
+                        tr.dataset.author = b.name ?? "";
+                        tr.dataset.genre = b.genre ?? "";
+                        tr.dataset.isbn = b.isbn ?? "";
+                        tr.dataset.publisher = b.publisher ?? "";
+                        tr.dataset.date = b.dateOfPublication ?? "";
+                        tr.dataset.language = b.languages ?? "";
+                        tr.dataset.nametype = b.typeOfName ?? "";
+
+                        tr.innerHTML = `
+                            <td>${escapeHtml(b.title)}</td>
+                            <td>${escapeHtml(b.genre)}</td>
+                            <td>${escapeHtml(b.name)}</td>
+                            <td>${escapeHtml(b.isbn)}</td>
+                            <td>${escapeHtml(b.publisher)}</td>
+                            <td>${escapeHtml(b.dateOfPublication)}</td>
+                            <td>${escapeHtml(b.languages)}</td>
+                            <td>${escapeHtml(b.typeOfName)}</td>
+                        `;
+
+                        tbody.appendChild(tr);
+                    }
+
+                    attachRowSelection();
+
+                    skip += rows.length;
+                    btn.innerText = "Load more";
+                    btn.disabled = false;
+                }
+
+                btn.addEventListener("click", loadMore);
+            }
+        </script>
+    </div>
+</body>
+</html>
